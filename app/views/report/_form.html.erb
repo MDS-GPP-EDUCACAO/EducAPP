@@ -1,5 +1,5 @@
 <%= form_tag("/report/request_report.json",id: "new-request", method: "get", remote: true, :class =>'form-inline') do %>
-
+  
   <div class="form-group">
   <%= label_tag(:year, "Ano de inicio") %>
   <%= select_tag(:year, options_for_select( Rate.all.pluck(:year).uniq, 
@@ -7,8 +7,8 @@
   <%#= text_field_tag(:year,nil, class: 'form-control')%>
   </div>
   <div class="form-group">
-  <%= label_tag(:final_year, "Ano final") %>
-  <%= select_tag(:final_year, options_for_select( Rate.all.pluck(:year).uniq, 
+  <%#= label_tag(:final_year, "Ano final") %>
+  <%#= select_tag(:final_year, options_for_select( Rate.all.pluck(:year).uniq, 
   :selected => params[:final_year]) , class: 'form-control'  ) %>
   </div>
 
@@ -18,12 +18,16 @@
   :selected => params[:id_state]) , class: 'form-control'  ) %>
   </div>
   <div class="form-group">
-  <%= label_tag(:id_grade, "Turma") %>
+  <%= label_tag(:id_grade, "Turma (Ano)") %>
   <%= select_tag(:id_grade, options_for_select( Rate.all.pluck(:id_grade).uniq, 
   :selected => params[:id_grade]) , class: 'form-control'  ) %>
   </div>
   
 
   <%= submit_tag("Gerar Relatório", :class => 'btn btn-primary') %>
+  <a id="clean_report" class="btn btn-default">Limpar</a>
+
 <% end %>
+
+
 

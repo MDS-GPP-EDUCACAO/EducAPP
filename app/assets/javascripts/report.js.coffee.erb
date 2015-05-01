@@ -2,8 +2,19 @@
 # All this logic will automatically be available in application.js.
 # You can use CoffeeScript in this file: http://coffeescript.org/
 
+clear = true
+
 $(document).ready ->
+  clean_report = () ->
+  	if !clear
+  		$('a#clean_report').click((event) ->
+    	 $('#report-container').empty().append(reportHTML)
+    	 $('div#report-container').hide()
+  		)
+
   $("#new-request").on("ajax:success", (e, data, status, xhr) ->
+
+  	clear = false
 
   	$('#report-container').empty().append(reportHTML)
 
@@ -11,25 +22,43 @@ $(document).ready ->
 
   	#request plot for Prova Brasil data
   	plot(formatDataToPlot(data.prova_brasil.portuguese_score, data.year), 'portuguese-pb-graph',["Português"],["#FF5600"])
-  	appendAverageToDiv(data.prova_brasil.portguese_average,"#portuguese-pb-average")
+  	appendAverageToDiv(data.prova_brasil.portguese_average,"#average-pt")
+  	appendStandardVariationToDiv(data.prova_brasil.portuguese_standard_deviation, "#standard-deviation-pt")
+  	appendVarienceToDiv(data.prova_brasil.portuguese_variance, "#variance-pt")
+
   	#request plot for Prova Brasil data
   	plot(formatDataToPlot(data.prova_brasil.math_score, data.year), 'math-pb-graph',["Matemática"], ["#0A62A4"])
-  	appendAverageToDiv(data.prova_brasil.math_average,"#math-pb-average")
+  	appendAverageToDiv(data.prova_brasil.math_average,"#average-math")
+  	appendStandardVariationToDiv(data.prova_brasil.math_standard_deviation, "#standard-deviation-math")
+  	appendVarienceToDiv(data.prova_brasil.math_variance, "#variance-math")
 
   	plot(formatDataToPlot(data.rates.evasion, data.year), 'rate-evasion-graph',["Evasão"],["#FF5600"])
-  	appendAverageToDiv(data.rates.evasion_average, '#rate-evasion-average')
+  	appendAverageToDiv(data.rates.evasion_average, '#average-evasion')
+  	appendStandardVariationToDiv(data.rates.evasion_standard_deviation, '#standard-deviation-evasion')
+  	appendVarienceToDiv(data.rates.evasion_variance, "#variance-evasion")
 
   	plot(formatDataToPlot(data.rates.performance, data.year), 'rate-performance-graph', ["Performace"],["#0A62A4"])
-  	appendAverageToDiv(data.rates.performance_average, '#rate-performance-average')
+  	appendAverageToDiv(data.rates.performance_average, '#average-perfomance')
+  	appendStandardVariationToDiv(data.rates.performance_standard_deviation, '#standard-deviation-perfomance')
+  	appendVarienceToDiv(data.rates.performance_variance, "#variance-perfomance")
 
   	plot(formatDataToPlot(data.rates.distortion, data.year), 'rate-distortion-graph', ["Distorção"],["#0A62A4"])
-  	appendAverageToDiv(data.rates.distortion_average, '#rate-distortion-average')
+  	appendAverageToDiv(data.rates.distortion_average, '#average-distortion')
+  	appendStandardVariationToDiv(data.rates.distortion_standard_deviation, '#standard-deviation-distortion')
+  	appendVarienceToDiv(data.rates.distortion_variance, "#variance-distortion")
 
   ).on "ajax:error", (e, xhr, status, error) ->
     $("#row").append "<p>ERROR</p>"
 
 appendAverageToDiv = (data,div) ->
-	$(div).append "<span>Média #{data.toFixed(2)}</span>"
+	$(div).append "<span><b>Média</b> #{data.toFixed(2)}</span>"
+
+appendStandardVariationToDiv = (data,div) ->
+	$(div).append "<span><b>Desvio Padrão</b> #{data.toFixed(2)}</span>"
+
+appendVarienceToDiv = (data,div) ->
+	$(div).append "<span><b>Variância</b> #{data.toFixed(2)}</span>"
+
 
 #Generic Method to plot an array of data at specific div
 plot = (data,div,labels,colors) ->
@@ -50,7 +79,9 @@ formatDataToPlot = (data, year)->
 		year++
 	return formatedData
 	
-reportHTML = '<div id="report-result" style="display: none;">
+reportHTML = '
+			<div id="report-result" style="display: none;">
+
 			<div class="panel panel-default">
 				<div class="panel-heading"><h4>Prova Brasil</h4></div>
 				<div class="panel-body">
@@ -63,8 +94,16 @@ reportHTML = '<div id="report-result" style="display: none;">
 				 		<div class="col-xs-6"><div id="math-pb-graph"></div></div>
 					</div>
 					<div class="row">
-						<div id="portuguese-pb-average" class="col-xs-6"></div>
-				 		<div id="math-pb-average" class="col-xs-6"></div>
+						<div id="portuguese-pb" class="col-xs-6">
+							<div id="average-pt" class="col-xs-4"></div>
+							<div id="standard-deviation-pt" class="col-xs-4"></div>
+							<div id="variance-pt" class="col-xs-4"></div>
+						</div>	
+				 		<div id="math-pb-average" class="col-xs-6">
+				 			<div id="average-math" class="col-xs-4"></div>
+							<div id="standard-deviation-math" class="col-xs-4"></div>
+							<div id="variance-math" class="col-xs-4"></div>
+				 		</div>
 					</div>
 				</div>	
 			</div>
@@ -84,9 +123,21 @@ reportHTML = '<div id="report-result" style="display: none;">
 				 		<div class="col-md-4"><div id="rate-distortion-graph"></div></div>
 					</div>
 					<div class="row">
-						<div id="rate-evasion-average" class="col-md-4"></div>
-				 		<div id="rate-performance-average" class="col-md-4"></div>
-				 		<div id="rate-distortion-average" class="col-md-4"></div>
+						<div id="rate-evasion" class="col-md-4">
+							<div id="average-evasion" class="col-xs-4"></div>
+							<div id="standard-deviation-evasion" class="col-xs-4"></div>
+							<div id="variance-evasion" class="col-xs-4"></div>
+						</div>
+				 		<div id="rate-performance" class="col-md-4">
+				 			<div id="average-perfomance" class="col-xs-4"></div>
+							<div id="standard-deviation-perfomance" class="col-xs-4"></div>
+							<div id="variance-perfomance" class="col-xs-4"></div>
+				 		</div>
+				 		<div id="rate-distortion" class="col-md-4">
+				 			<div id="average-distortion" class="col-xs-4"></div>
+							<div id="standard-deviation-distortion" class="col-xs-4"></div>
+							<div id="variance-distortion" class="col-xs-4"></div>
+				 		</div>
 					</div>
 				</div>	
 			</div>
