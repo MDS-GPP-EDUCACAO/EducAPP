@@ -8,8 +8,8 @@
 /.bundle
 
 # Ignore the default SQLite database.
-/db/*.sqlite3
-/db/*.sqlite3-journal
+#/db/*.sqlite3
+#/db/*.sqlite3-journal
 
 # Ignore all logfiles and tempfiles.
 /log/*.log
@@ -31,3 +31,9 @@ coverage/.last_run.json
 coverage/.resultset.json
 
 coverage/index.html
+
+coverage/index.html
+
+coverage/.last_run.json
+
+coverage/.resultset.json

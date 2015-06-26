@@ -4,81 +4,109 @@
 
 
 $(document).ready ->
-  clean_report = () ->
-		$('a#clean_report').click((event) ->
-  	 $('#report-container').empty().append(reportHTML)
-  	 $('div#report-container').hide(); $('#clean_report').hide() 
-		)
+  
+  $('a#clean_report').click((event) ->
+    $('#report-container').empty().append(reportHTML)
+    $('div#report-container').hide(); $('#clean_report').hide()
+  )
 
-  $("#new-request").on("ajax:success", (e, data, status, xhr) ->
-  	$('#report-container').empty().append(reportHTML)
-  	$("#report-result").show(); $("div#report-container").show(); $('#clean_report').show()
+  $("#test_type").on("change", ()->
+     selectedValue = $("#test_type").val()
+     if selectedValue == 'Publica'
+       $("#public_type").show()
+     else
+       $("#public_type").hide()
+    )
+
+  $("#new-report-request").submit(() ->
+    $("#report-container").empty()
+    target = document.getElementById('loading');
+    new Spinner({color:'#000', lines: 12}).spin(target);
+    )
+
+  $("#new-report-request").on("ajax:success", (e, data, status, xhr) ->
+    $('#report-container').empty().append(reportHTML)
+    $("#report-result").show()
+    $("div#report-container").show(); $('#clean_report').show()
+    $("#loading").empty()
 
 
-  	#request plot for Prova Brasil data
-  	plotBar(formatIDEBDataToPlot(data.ideb.ideb, data.ideb.ideb_years,data.ideb.ideb_grades), 'portuguese-pb-graph',["IDEB"],["#F4D03F"])
-  	appendAverageToDiv(data.ideb.ideb_average,"#average-pt")
-  	appendStandardVariationToDiv(data.ideb.ideb_standard_deviation, "#standard-deviation-pt")
-  	appendVarienceToDiv(data.ideb.ideb_variance, "#variance-pt")
+    if data.ideb.status == "available"
+      plotBar(formatIDEBDataToPlot(data.ideb.ideb, data.ideb.ideb_years,data.ideb.ideb_grade_ids), 'ideb-graph',["IDEB"],["#F4D03F"])
+      appendAverageToDiv(data.ideb.ideb_average,"#average-ideb")
+      appendStandardVariationToDiv(data.ideb.ideb_standard_deviation, "#standard-deviation-ideb")
+      appendVarienceToDiv(data.ideb.ideb_variance, "#variance-ideb")
+    else
+      noResultDiv("#ideb-report","<strong>Não existem dados disponíveis  do IDEB para essa turma. </strong>")
 
-  	plotLine(formatDataToPlot(data.rates.evasion, data.year,data.grade), 'rate-evasion-graph',["Evasão"],["#FF5600"])
-  	appendAverageToDiv(data.rates.evasion_average, '#average-evasion')
-  	appendStandardVariationToDiv(data.rates.evasion_standard_deviation, '#standard-deviation-evasion')
-  	appendVarienceToDiv(data.rates.evasion_variance, "#variance-evasion")
-
-  	plotLine(formatDataToPlot(data.rates.performance, data.year,data.grade), 'rate-performance-graph', ["Performace"],["#0A62A4"])
-  	appendAverageToDiv(data.rates.performance_average, '#average-perfomance')
-  	appendStandardVariationToDiv(data.rates.performance_standard_deviation, '#standard-deviation-perfomance')
-  	appendVarienceToDiv(data.rates.performance_variance, "#variance-perfomance")
-
-  	plotLine(formatDataToPlot(data.rates.distortion, data.year,data.grade), 'rate-distortion-graph', ["Distorção"],["#FF5600"])
-  	appendAverageToDiv(data.rates.distortion_average, '#average-distortion')
-  	appendStandardVariationToDiv(data.rates.distortion_standard_deviation, '#standard-deviation-distortion')
-  	appendVarienceToDiv(data.rates.distortion_variance, "#variance-distortion")
+    if data.rates.status == "available"
+      plotLine(formatDataToPlot(data.rates.evasion, data.year,data.grade), 'rate-evasion-graph',["Evasão"],["#FF5600"])
+      appendAverageToDiv(data.rates.evasion_average, '#average-evasion')
+      appendStandardVariationToDiv(data.rates.evasion_standard_deviation, '#standard-deviation-evasion')
+      appendVarienceToDiv(data.rates.evasion_variance, "#variance-evasion")
+      
+      plotLine(formatDataToPlot(data.rates.performance, data.year,data.grade), 'rate-performance-graph', ["Performace"],["#0A62A4"])
+      appendAverageToDiv(data.rates.performance_average, '#average-perfomance')
+      appendStandardVariationToDiv(data.rates.performance_standard_deviation, '#standard-deviation-perfomance')
+      appendVarienceToDiv(data.rates.performance_variance, "#variance-perfomance")
+      
+      plotLine(formatDataToPlot(data.rates.distortion, data.year,data.grade), 'rate-distortion-graph', ["Distorção"],["#FF5600"])
+      appendAverageToDiv(data.rates.distortion_average, '#average-distortion')
+      appendStandardVariationToDiv(data.rates.distortion_standard_deviation, '#standard-deviation-distortion')
+      appendVarienceToDiv(data.rates.distortion_variance, "#variance-distortion")
+    else
+      noResultDiv("#rates","<strong>Não existem dados disponíveis dessa turma.</strong>")
 
   ).on "ajax:error", (e, xhr, status, error) ->
-    $("#row").append "<p>ERROR</p>"
+    $("#row").append "<p>ERROR, tente novamente.</p>"
 
 appendAverageToDiv = (data,div) ->
-	$(div).append "<span><b>Média</b> #{data.toFixed(2)}</span>"
+  $(div).append "<span><b>Média</b> #{data.toFixed(2)}</span>"
 
 appendStandardVariationToDiv = (data,div) ->
-	$(div).append "<span><b>Desvio Padrão</b> #{data.toFixed(2)}</span>"
+  $(div).append "<span><b>Desvio Padrão</b> #{data.toFixed(2)}</span>"
 
 appendVarienceToDiv = (data,div) ->
-	$(div).append "<span><b>Variância</b> #{data.toFixed(2)}</span>"
+  $(div).append "<span><b>Variância</b> #{data.toFixed(2)}</span>"
 
+noResultDiv = (div,info) ->
+  $(div).empty()
+  $(div).removeClass('panel')
+  $(div).removeClass('panel-default')
+  $(div).addClass('alert alert-danger')
+  $(div).append(info)
 
 #Generic Method to plot an array of data at specific div
 plotLine = (data,div,labels,colors) ->
-	new Morris.Line({
+  new Morris.Line({
 
-		element: div,
-		data: data,
-		xkey: 'x'
-		ykeys: ['y']
-		labels: labels
-		lineColors: colors
-		})
+    element: div,
+    data: data,
+    xkey: 'x'
+    ykeys: ['y']
+    labels: labels
+    lineColors: colors
+    })
 
 plotBar = (data,div,labels,colors) ->
-	new Morris.Bar({
+  new Morris.Bar({
 
-		element: div,
-		data: data,
-		xkey: 'x'
-		ykeys: ['y']
-		labels: labels
-		lineColors: colors
-		})
+    element: div,
+    data: data,
+    xkey: 'x'
+    ykeys: ['y']
+    labels: labels
+    lineColors: colors
+    })
 
 #Method to format an array of data to a format that function plot needs
 formatDataToPlot = (data, year, grade)->
-	formatedData = []
-	for value in data by 1
-		formatedData.push {x: "#{year} - #{grade}° ano", y: value}
-		year++; grade++
-	return formatedData
+  formatedData = []
+  for value in data by 1
+    formatedData.push {x: "#{year} - #{grade}° ano", y: value}
+    year++
+    grade++
+  return formatedData
 
 #Method to format an array of data to a format that function plot needs
 formatIDEBDataToPlot = (data, years, grades)->
@@ -88,57 +116,59 @@ formatIDEBDataToPlot = (data, years, grades)->
     formatedData.push {x: "#{years[i]} - #{grades[i]}° ano", y: value}
     i++
   return formatedData
+  
 
-	
+
 reportHTML = '
-        <div id="report-result" style="display: none;">            <div class="panel panel-default">
+        <div id="report-result" style="display: none;">
+         <div id="ideb-report" class="panel panel-default">
                 <div class="panel-heading"><h4>Ideb</h4></div>
-                <div class="panel-body-ideb">
+                <div id="panel-body-ideb" class="panel-body-ideb">
                     <div class="row">
                     </div>
                     <div class="row">
-                        <div class="col-xs-6"><div id="portuguese-pb-graph"></div>
+                        <div class="col-xs-6"><div id="ideb-graph"></div>
                             <div class="row">
-                                <div id="portuguese-pb">
-                                    <div id="average-pt" class="col-xs-4"></div>
-                                    <div id="standard-deviation-pt" class="col-xs-4"></div>
-                                    <div id="variance-pt" class="col-xs-4"></div>
+                                <div id="ideb">
+                                    <div id="average-ideb" class="col-xs-4"></div>
+                                    <div id="standard-deviation-ideb" class="col-xs-4"></div>
+                                    <div id="variance-ideb" class="col-xs-4"></div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-xs-6">
-                          <div id="portuguese-pb-graph-text">
+                          <div id="ideb-graph-text">
                             <div class="description-col-md-6">
-                            <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp 
-                                O Índice de Desenvolvimento da Educação Básica (Ideb) tem o objetivo de 
-                                reunir em um único indicador dois conceitos importantes para a qualidade 
-                                da educação: fluxo escolar e média de desempenho nas avaliações. 
+                            <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp
+                                O Índice de Desenvolvimento da Educação Básica (Ideb) tem o objetivo de
+                                reunir em um único indicador dois conceitos importantes para a qualidade
+                                da educação: fluxo escolar e média de desempenho nas avaliações.
                                 </font></p>
 
                             <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp
                              Ele agrega ao enfoque pedagógico dos resultados das avaliações em larga escala do
                              <a href="http://portal.inep.gov.br/" target="_blank">Inep</a>
                              a possibilidade de resultados sintéticos, facilmente assimiláveis, e que permitem
-                             traçar metas de qualidade educacional para os sistemas. O indicador é calculado 
+                             traçar metas de qualidade educacional para os sistemas. O indicador é calculado
                              a partir dos dados sobre aprovação, obtidos no Censo Escolar, e médias de desempenho
-                             nas avaliações do Inep: o Seab (para unidades da federação e para o país) e a Prova 
+                             nas avaliações do Inep: o Seab (para unidades da federação e para o país) e a Prova
                              Brasil (para os municípios).</font></p>
-                            
+
                           </div>
                           </div>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
             <br />
-            <br />            <div class="panel panel-default">
-                
+            <br />            <div id="rates" class="panel panel-default">
+
                 <div class="panel-heading"><h4>Índices</h4></div>
                 <div class="evasion">
                 <div class="panel-body">
                     <div class="row">
-                  
+
                         <h4>Evasão</h4>
                     </div>
                     <div class="row">
@@ -163,16 +193,16 @@ reportHTML = '
                         </div>
                         </div>
                           <div class="description-col-md-6">
-                            
-                              <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp 
-                                O Índice de Evasão retrata o percentual de alunos que deixaram  
+
+                              <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp
+                                O Índice de Evasão retrata o percentual de alunos que deixaram
                                 de frequentar a escola, caracterizando dessa forma abandono escolar.</font></p>
 
-                              <p style="text-align: justify;"><font face="cursive">  &nbsp &nbsp &nbsp &nbsp 
-                                Tal índice é obtido por meio do Censo Escolar pelo Inep e 
+                              <p style="text-align: justify;"><font face="cursive">  &nbsp &nbsp &nbsp &nbsp
+                                Tal índice é obtido por meio do Censo Escolar pelo Inep e
                                 compõe o Índice de Desenvolvimento da Educação Brasileira (Ideb).</font></p>
-                              
-                          </div>  
+
+                          </div>
                           </div>
                     </div>
                   </div>
@@ -180,7 +210,7 @@ reportHTML = '
                 <div class="rendiment">
                 <div class="panel-body">
                     <div class="row">
-                        <h4>Redimento</h4>
+                        <h4>Rendimento</h4>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
@@ -188,9 +218,9 @@ reportHTML = '
 
                         </div>
                           <div class="description-col-md-6">
-                            <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp 
-                                O Índice de Rendimento é baseado na Anresc. A Avaliação Nacional do Redimento 
-                                Escolar (Anresc) é uma avaliação criada pelo Ministério da Educação. Sendo 
+                            <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp
+                                O Índice de Rendimento é baseado na Anresc. A Avaliação Nacional do Rendimento
+                                Escolar (Anresc) é uma avaliação criada pelo Ministério da Educação. Sendo
                                 complementar ao Sistema Nacional de Educação Básica e um dos componentes para
                                 o cálculo do Índice de Desenvolvimento da Educação Básica, a avaliação é realizada
                                 a cada dois anos e participam todos os estudantes de escolas públicas urbanas do 5º
@@ -198,7 +228,7 @@ reportHTML = '
 
                             <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp
                              A avaliação é dividida em duas provas: Língua Portuguesa e Matemática.</font></p>
-                            
+
                           </div>
                         </div>
                         <div class="col-md-6">
@@ -211,7 +241,7 @@ reportHTML = '
                          </div>
                     </div></div>
                     </div>
-                    
+
                 </div>
                 </div>
                 <div class="panel-body">
@@ -232,22 +262,22 @@ reportHTML = '
                         <div class="col-md-6"><div id="rate-distortion-graph-text"></div>
                           <div class="description-col-md-6">
                             <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp
-                              O Índice de Distorção representa o percentual de alunos que se encontram em 
+                              O Índice de Distorção representa o percentual de alunos que se encontram em
                               condição de distorção idade-série.</font></p>
-                            <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp 
+                            <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp
                               O aluno que reprova ou abandona os estudos por dois anos ou mais
                               durante a trajetória de escolarização, repetindo por consequência uma mesma
-                              série, se encontra em defasem em relação à idade considerada adequada para 
-                              cada ano de estudo, de acordo com o que propõe a legislação educacional do 
+                              série, se encontra em defasem em relação à idade considerada adequada para
+                              cada ano de estudo, de acordo com o que propõe a legislação educacional do
                               país. </font></p>
-                            <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp 
+                            <p style="text-align: justify;"><font face="cursive"> &nbsp &nbsp &nbsp &nbsp
                             Neste caso o aluno será contabilizado na situação de distorção idade-série.</font></p>
-                            
+
                           </div>
-                          
+
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
         </div>'
